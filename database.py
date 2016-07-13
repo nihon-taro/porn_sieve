@@ -16,6 +16,7 @@ class Database:
                       name        TEXT,
                       likes       REAL,
                       feedback    REAL,
+                      description TEXT,
                       scrape_date DATE);''')
         self.cnx.commit()
 
@@ -33,7 +34,8 @@ class Database:
                 "likes": 0,
                 "stars": ["Claudette Shannon", "Ada Lovelace", "Edsgar Dickstra"],
                 "url": "https://unixxx.net/",
-                "img": "https://unixxx.net/man_pages/pulse_injection.png"
+                "img": "https://unixxx.net/man_pages/pulse_injection.png",
+                "description": "test"
             }
             self.save(fake_data)
             self.save_feedback(fake_data["url"], 2)
@@ -48,7 +50,7 @@ class Database:
                            data["img"],
                            data["name"],
                            data["likes"],
-                           None,
+                           data["description"],
                            datetime.now()))
                 self.cnx.commit()
 
@@ -129,10 +131,10 @@ class Database:
     def get(self, url):
         with self.lock:
             c = self.cnx.cursor()
-            c.execute('''SELECT img, name,
+            c.execute('''SELECT img, name, description,
                       likes, feedback, scrape_date
                       FROM videos WHERE url = ?;''', (url,))
-            img, name, likes, feedback, date = c.fetchone()
+            img, name, description, likes, feedback, date = c.fetchone()
 
             c.execute("SELECT tag FROM tags WHERE url = ?;", (url,))
             tags = [tag[0] for tag in c.fetchall()]
@@ -147,7 +149,8 @@ class Database:
                     "feedback": feedback,
                     "scrape_date": date,
                     "tags": tags,
-                    "stars": stars}
+                    "stars": stars,
+                    "description": description}
 
             return data
 
