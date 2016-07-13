@@ -9,6 +9,8 @@ from datetime import datetime
 def site_selector(site_name):
     if "xvideos" in site_name:
         return XvideosScraper()
+    elif "dmm" in site_name:
+        return DmmScraper()
     else:
         raise NotImplementedError
 
@@ -56,10 +58,7 @@ class Scraper:
             print(e, url)
             return False
 
-        data = {}
-        data["img"] = None
-        data["url"] = url
-        data["scrape_date"] = (datetime.now() - datetime.utcfromtimestamp(0)).total_seconds()
+        data = {"img": None, "url": url, "scrape_date": (datetime.now() - datetime.utcfromtimestamp(0)).total_seconds()}
 
         return self.scrape_video_extra(pg, data)
 
@@ -69,6 +68,48 @@ class Scraper:
         do scraping and formatting specific to that site.
         """
         return data
+
+
+class DmmScraper(Scraper):
+    def __init__(self):
+        self.site_name = "dmm"
+        self.base_url = 'http://www.dmm.co.jp/'
+        Scraper.__init__(self)
+
+    def fmt_gallery(self, niche, page):
+        return 'http://www.dmm.co.jp/digital/videoa/-/list/=/sort=date/page=' + str(page + 1)
+
+    def img_munge(self, element):
+        return 'https://placeholdit.imgix.net/~text?txtsize=33&txt=350%C3%97150&w=350&h=150'
+
+    def vid_munge(self, path):
+        return self.base_url + path
+
+    def scrape_video_extra(self, pg, data):
+        data["name"] = self.__extract_name(pg)
+        data["stars"] = self.__extract_stars(pg)
+        data["tags"] = self.__extract_tags(pg)
+        data["tags"] += data["name"].split()
+        data["likes"] = self.__extract_likes(pg)
+        data["description"] = 'test'
+
+        return data
+
+    def __extract_name(self, html):
+        self.clean(html.xpath(self.meta_xpaths["name"])[0])
+        return 'dummy name'
+
+    def __extract_stars(self, html):
+        [self.clean(star) for star in html.xpath(self.meta_xpaths["stars"])]
+        return ['dummy_star_1', 'dummy_star_2']
+
+    def __extract_tags(self, html):
+        [self.clean(tag) for tag in html.xpath(self.meta_xpaths["tags"])]
+        return ['dummy_tag_1', 'dummy_tag_2']
+
+    def __extract_likes(self, html):
+        # float(self.clean(pg.xpath(self.meta_xpaths["likes"])[0]))
+        return 10
 
 
 class XvideosScraper(Scraper):

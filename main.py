@@ -1,38 +1,39 @@
 import sys, time, random, copy
 
 from threading import RLock
-from queue     import PriorityQueue
+from queue import PriorityQueue
 
 from PySide import QtGui, QtCore
 import requests
 import webbrowser
 
-from misc            import redo_predictions, get_niche_xpaths
-from scraper         import PopulateQ
-from database        import Database
-from predict         import Predictor
+from misc import redo_predictions, get_niche_xpaths
+from scraper import PopulateQ
+from database import Database
+from predict import Predictor
 from site_interfaces import site_selector
 
 
 class Window(QtGui.QWidget):
     """ The graphical interface to the software that the user sees. """
+
     def __init__(self):
         super(Window, self).__init__()
-        self.site      = "xvideos"
-        self.xpaths    = get_niche_xpaths(self.site)
-        self.start_pg  = 0
-        self.max_pgs   = 0
-        self.cur_vid   = None
-        self.cur_img   = None
+        self.site = "dmm"
+        self.xpaths = get_niche_xpaths(self.site)
+        self.start_pg = 0
+        self.max_pgs = 0
+        self.cur_vid = None
+        self.cur_img = None
         self.last_pred = None
         self.default_img_flag = True
-        self.preview_size     = 2**9  # arbitrary number
+        self.preview_size = 2 ** 9  # arbitrary number
 
-        self.winlock   = RLock()
-        self.thr       = None
-        self.q         = PriorityQueue()
-        self.db        = Database()
-        self.scraper   = site_selector(self.site)
+        self.winlock = RLock()
+        self.thr = None
+        self.q = PriorityQueue()
+        self.db = Database()
+        self.scraper = site_selector(self.site)
 
         self.set_keybindings()
 
@@ -50,7 +51,6 @@ class Window(QtGui.QWidget):
 
         self.predict = Predictor()
 
-
     def set_keybindings(self):
         bind = lambda k, f: QtGui.QShortcut(QtGui.QKeySequence(k), self, f)
         bind(QtCore.Qt.Key_Tab, self.skip)
@@ -58,20 +58,19 @@ class Window(QtGui.QWidget):
         bind(QtCore.Qt.Key_Left, self.unpop_video)
         bind(QtCore.Qt.Key_O, lambda: webbrowser.open(self.cur_vid))  # letter, not number
         # eval isn't working here for some reason; even with a macro, this is ugly
-        bind(QtCore.Qt.Key_0, lambda: self.slider.setValue(0*11))     # number, not letter
-        bind(QtCore.Qt.Key_1, lambda: self.slider.setValue(1*11))
-        bind(QtCore.Qt.Key_2, lambda: self.slider.setValue(2*11))
-        bind(QtCore.Qt.Key_3, lambda: self.slider.setValue(3*11))
-        bind(QtCore.Qt.Key_4, lambda: self.slider.setValue(4*11))
-        bind(QtCore.Qt.Key_5, lambda: self.slider.setValue(5*11))
-        bind(QtCore.Qt.Key_6, lambda: self.slider.setValue(6*11))
-        bind(QtCore.Qt.Key_7, lambda: self.slider.setValue(7*11))
-        bind(QtCore.Qt.Key_8, lambda: self.slider.setValue(8*11))
-        bind(QtCore.Qt.Key_9, lambda: self.slider.setValue(9*11))
+        bind(QtCore.Qt.Key_0, lambda: self.slider.setValue(0 * 11))  # number, not letter
+        bind(QtCore.Qt.Key_1, lambda: self.slider.setValue(1 * 11))
+        bind(QtCore.Qt.Key_2, lambda: self.slider.setValue(2 * 11))
+        bind(QtCore.Qt.Key_3, lambda: self.slider.setValue(3 * 11))
+        bind(QtCore.Qt.Key_4, lambda: self.slider.setValue(4 * 11))
+        bind(QtCore.Qt.Key_5, lambda: self.slider.setValue(5 * 11))
+        bind(QtCore.Qt.Key_6, lambda: self.slider.setValue(6 * 11))
+        bind(QtCore.Qt.Key_7, lambda: self.slider.setValue(7 * 11))
+        bind(QtCore.Qt.Key_8, lambda: self.slider.setValue(8 * 11))
+        bind(QtCore.Qt.Key_9, lambda: self.slider.setValue(9 * 11))
 
         bind(QtCore.Qt.Key_Enter, self.rate)  # keypad enter
         bind(QtCore.Qt.Key_Return, self.rate)  # regular enter
-
 
     def init_left_pane(self):
         self.left_pane = QtGui.QVBoxLayout()
@@ -106,16 +105,16 @@ class Window(QtGui.QWidget):
         self.load_url_box.setPlaceholderText("load a specific url")
 
         self.feedback_spin = QtGui.QSpinBox()
-        self.feedback_spin.setMaximum(100)          # (ratings must be between 0 and 100)
+        self.feedback_spin.setMaximum(100)  # (ratings must be between 0 and 100)
 
         self.enter_btn = QtGui.QPushButton("save")  # also on bottom is the enter/save button
         self.enter_btn.clicked.connect(lambda: self.save_usr_url())
 
-        self.load_url_extra = QtGui.QHBoxLayout()   # put feedback and enter in one row
+        self.load_url_extra = QtGui.QHBoxLayout()  # put feedback and enter in one row
         self.load_url_extra.addWidget(self.feedback_spin)
         self.load_url_extra.addWidget(self.enter_btn)
 
-        self.load_url_group = QtGui.QVBoxLayout()   # group it all together
+        self.load_url_group = QtGui.QVBoxLayout()  # group it all together
         self.load_url_group.addWidget(self.load_url_box)
         self.load_url_group.addLayout(self.load_url_extra)
         self.left_pane.addLayout(self.load_url_group)
@@ -133,7 +132,6 @@ class Window(QtGui.QWidget):
         self.left_pane.addWidget(self.quit_btn)
 
         self.layout.addLayout(self.left_pane)
-
 
     def init_middle_pane(self):
         self.mid_pane = QtGui.QHBoxLayout()
@@ -161,7 +159,6 @@ class Window(QtGui.QWidget):
 
         self.layout.addLayout(self.mid_pane)
 
-
     def init_right_pane(self):
         self.right_pane = QtGui.QVBoxLayout()
 
@@ -188,7 +185,6 @@ class Window(QtGui.QWidget):
 
         self.layout.addLayout(self.right_pane)
 
-
     def init_page_btns(self):
         """
         Create the start page and pages to scrape buttons along
@@ -209,7 +205,7 @@ class Window(QtGui.QWidget):
         self.start_pg_spn = QtGui.QSpinBox(self)
         self.start_pg_spn.valueChanged[int].connect(self.set_start_pg)
 
-        self.start_pg_group.addWidget(self.start_lbl)     # "start page"
+        self.start_pg_group.addWidget(self.start_lbl)  # "start page"
         self.start_pg_group.addWidget(self.start_pg_spn)  # <spinbox>
         self.pg_spinboxes.addLayout(self.start_pg_group)
         self.pg_spinboxes.addSpacing(20)
@@ -225,8 +221,8 @@ class Window(QtGui.QWidget):
         self.n_pgs_spn.valueChanged[int].connect(self.set_max_pgs)
         self.n_pgs_spn.setMinimum(1)
 
-        self.n_pgs_group.addWidget(self.n_pgs_lbl)        # "pages to scrape"
-        self.n_pgs_group.addWidget(self.n_pgs_spn)        # <spinbox>
+        self.n_pgs_group.addWidget(self.n_pgs_lbl)  # "pages to scrape"
+        self.n_pgs_group.addWidget(self.n_pgs_spn)  # <spinbox>
         self.n_pgs_group.setAlignment(QtCore.Qt.Vertical)
         self.pg_spinboxes.addLayout(self.n_pgs_group)
 
@@ -234,13 +230,11 @@ class Window(QtGui.QWidget):
         self.pg_spinboxes.setAlignment(QtCore.Qt.AlignTop)
         self.left_pane.addLayout(self.pg_spinboxes)
 
-
     def retrain(self):
         QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         self.predict.refit_from_scratch()
         redo_predictions(self.predict, self.q.qsize(), self.q)
         QtGui.QApplication.restoreOverrideCursor()
-
 
     def save_usr_url(self):
         url = self.load_url_box.text()
@@ -248,7 +242,6 @@ class Window(QtGui.QWidget):
         self.db.save(data)
         self.db.give_feedback(url, self.feedback_spin.value())
         print("finished")
-
 
     def refresh_images(self):
         try:
@@ -278,14 +271,12 @@ class Window(QtGui.QWidget):
             for tag in tags:
                 tag_str += "\n" + tag
 
-
         info_str = info_str.format(data["dur"],
                                    data["views"],
                                    # old design had an out of 6 scale
                                    round(self.last_pred, 2),
                                    tag_str)
         self.info_box.setText(info_str)
-
 
     def pop_video(self):
         """ Remove a video from the queue and display in the program. """
@@ -295,8 +286,8 @@ class Window(QtGui.QWidget):
             return self.last_pred, self.cur_vid
         # TODO last_pred should be called cur_pred
         self.prev_pred = copy.copy(self.last_pred)
-        self.prev_vid  = copy.copy(self.cur_vid)
-        self.prev_img  = copy.copy(self.cur_img)
+        self.prev_vid = copy.copy(self.cur_vid)
+        self.prev_img = copy.copy(self.cur_img)
         self.last_pred, self.cur_vid = self.q.get()
         # PriorityQueue pops the smallest items first, so we have to
         # remember to get rid of the negative sign we used to make
@@ -305,7 +296,6 @@ class Window(QtGui.QWidget):
         self.cur_img = self.db.get_img(self.cur_vid)
         return self.last_pred, self.cur_vid
 
-
     def unpop_video(self):
         """ Undo previous pop_video. """
         # swap prev with cur
@@ -313,32 +303,28 @@ class Window(QtGui.QWidget):
         self.cur_img, self.prev_img = self.prev_img, self.cur_img
         self.refresh_images()
 
-
     def set_start_pg(self, num):
         self.start_pg = num
 
-
     def set_max_pgs(self, num):
         self.max_pgs = num
-
 
     def scrape(self):
         if self.thr:
             del self.thr
         self.update_prog(0)
         self.thr = PopulateQ(
-                              self.site,        self.niche,        self.q,
-                              self.start_pg,    self.max_pgs,      self.winlock,
-                              self.predict
-                            )
+            self.site, self.niche, self.q,
+            self.start_pg, self.max_pgs, self.winlock,
+            self.predict
+        )
         self.thr.updateProgress.connect(self.update_prog)
         self.thr.start()
-
 
     def rate(self):
         self.db.give_feedback(self.cur_vid, self.slider.value())
         data = self.db.get(self.cur_vid)
-        data["feedback"] = self.slider.value() + 0.0001 # db doesn't like 0s
+        data["feedback"] = self.slider.value() + 0.0001  # db doesn't like 0s
         with self.winlock:
             self.predict.fit(data)
         if self.q.empty():
@@ -349,7 +335,6 @@ class Window(QtGui.QWidget):
             self.pop_video()
             self.refresh_images()
 
-
     def update_prog(self, progress):
         self.prog.setValue(progress)
         if self.default_img_flag:
@@ -358,11 +343,9 @@ class Window(QtGui.QWidget):
                 self.refresh_images()
                 self.default_img_flag = False
 
-
     def update_prog_init(self, progress):
         self.prog.setValue(progress)
         self.repaint()
-
 
     def skip(self):
         if self.q.empty():
@@ -373,12 +356,10 @@ class Window(QtGui.QWidget):
             self.pop_video()
             self.refresh_images()
 
-
     def set_niche(self, text):
         if text == "select niche":
             self.niche = None
         self.niche = text
-
 
     def quit(self):
         self.db.cnx.close()
