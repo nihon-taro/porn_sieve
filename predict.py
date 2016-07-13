@@ -1,16 +1,14 @@
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.ensemble                import RandomForestRegressor as RandomForest
-from sklearn.decomposition           import PCA
-from sklearn.utils.validation        import NotFittedError
-from sklearn.externals               import joblib
+from sklearn.ensemble import RandomForestRegressor as RandomForest
+from sklearn.decomposition import PCA
+from sklearn.externals import joblib
 
 from scipy.sparse import coo_matrix, hstack, vstack
 import numpy as np
 
-from PySide   import QtCore
-from queue    import PriorityQueue
+from PySide import QtCore
+from queue import PriorityQueue
 from datetime import datetime
-from copy     import copy
 import os, shutil
 
 from database import Database
@@ -27,20 +25,19 @@ class Predictor:
     that into a vector of numbers, then fits a random forest on
     it.
     """
-    db    = Database("default.db")
-    q     = PriorityQueue()
+    db = Database("default.db")
+    q = PriorityQueue()
     threaded_fit = None
 
     def __init__(self):
         fs = os.listdir("usr_data")
-        if  ("model.pkl" in fs) and ("enc.pkl" in fs) and ("pca.pkl" in fs):
+        if ("model.pkl" in fs) and ("enc.pkl" in fs) and ("pca.pkl" in fs):
             self.model = joblib.load("usr_data/model.pkl")
-            self.enc   = joblib.load("usr_data/enc.pkl")
-            self.pca   = joblib.load("usr_data/pca.pkl")
+            self.enc = joblib.load("usr_data/enc.pkl")
+            self.pca = joblib.load("usr_data/pca.pkl")
 
         else:
             self.refit_from_scratch()
-
 
     def fit(self, data):
         """
@@ -48,7 +45,6 @@ class Predictor:
         the future) update the model incrementally.
         """
         pass
-
 
     def refit_from_scratch(self):
         """ Create a new model directly from the database, rather
@@ -59,16 +55,15 @@ class Predictor:
         self.threaded_fit.start()
 
         temp_model = RandomForest(max_features="sqrt", n_jobs=-1)
-        temp_enc   = CountVectorizer()
-        X = []   # binary matrix the presence of tags
-        Z = []   # additional numerical data
-        Y = []   # target (to predict) values
-        db_size = self.db.size()
+        temp_enc = CountVectorizer()
+        X = []  # binary matrix the presence of tags
+        Z = []  # additional numerical data
+        Y = []  # target (to predict) values
         for data in self.db.yield_some(250):
             feedback = data["feedback"]
-            tags     = data[  "tags"  ]
+            tags = data["tags"]
             if feedback and tags:
-                Y.append(   feedback   )
+                Y.append(feedback)
                 X.append(" ".join(tags))
                 Z.append(self.fmt_numerical(data))
 
@@ -79,10 +74,9 @@ class Predictor:
         reduced_X = pca.fit_transform(X.todense())
         temp_model.fit(reduced_X, Y)
 
-        self.pca   = pca
+        self.pca = pca
         self.model = temp_model
-        self.enc   = temp_enc
-
+        self.enc = temp_enc
 
     def predict(self, data):
         """ Given a dict of video data, predict how much
@@ -93,7 +87,6 @@ class Predictor:
         x = hstack((tags, nums))
         x = self.pca.transform(x.todense())
         return self.model.predict(x)[0]
-
 
     def fmt_numerical(self, data):
         """
@@ -125,7 +118,6 @@ class Predictor:
                 nums.append(data[k])
         return nums
 
-
     def quit(self):
         # this no longer does anything
         pass
@@ -145,16 +137,15 @@ class ThreadedFit(QtCore.QThread, Predictor):
         shutil.copyfile("default.db", "_temp.db")
         db = Database("_temp.db")
         temp_model = RandomForest(max_features="sqrt", n_jobs=-1)
-        temp_enc   = CountVectorizer()
-        X = []   # binary matrix the presence of tags
-        Z = []   # additional numerical data
-        Y = []   # target (to predict) values
-        db_size = db.size()
+        temp_enc = CountVectorizer()
+        X = []  # binary matrix the presence of tags
+        Z = []  # additional numerical data
+        Y = []  # target (to predict) values
         for i, data in enumerate(db.yield_rated()):
             feedback = data["feedback"]
-            tags     = data[  "tags"  ]
+            tags = data["tags"]
             if feedback and tags:
-                Y.append(   feedback   )
+                Y.append(feedback)
                 X.append(" ".join(tags))
                 Z.append(self.fmt_numerical(data))
 
@@ -165,13 +156,13 @@ class ThreadedFit(QtCore.QThread, Predictor):
         reduced_X = pca.fit_transform(X.todense())
         temp_model.fit(reduced_X, Y)
 
-        pca   = pca
+        pca = pca
         model = temp_model
-        enc   = temp_enc
+        enc = temp_enc
 
-        joblib.dump(enc,   "usr_data/enc.pkl"  )
+        joblib.dump(enc, "usr_data/enc.pkl")
         joblib.dump(model, "usr_data/model.pkl")
-        joblib.dump(pca,   "usr_data/pca.pkl"  )
+        joblib.dump(pca, "usr_data/pca.pkl")
 
         del db
         os.remove("_temp.db")
