@@ -45,11 +45,12 @@ class Database:
             c = self.cnx.cursor()
             c.execute("SELECT url FROM videos WHERE url = ?;", (data["url"],))
             if not c.fetchall():
-                c.execute("INSERT INTO videos VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                c.execute("INSERT INTO videos VALUES (?, ?, ?, ?, ?, ?, ?)",
                           (data["url"],
                            data["img"],
                            data["name"],
                            data["likes"],
+                           None,
                            data["description"],
                            datetime.now()))
                 self.cnx.commit()
