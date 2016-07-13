@@ -1,10 +1,11 @@
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime
 from threading import RLock
 
 
 class Database:
     lock = RLock()
+
     def __init__(self, dbname="default.db"):
         # check to see if there's a database open
         self.cnx = sqlite3.connect(dbname)
@@ -13,9 +14,7 @@ class Database:
                      (url         TEXT PRIMARY KEY,
                       img         TEXT,
                       name        TEXT,
-                      views       INT ,
                       likes       REAL,
-                      dur         REAL,
                       feedback    REAL,
                       scrape_date DATE);''')
         self.cnx.commit()
@@ -28,19 +27,16 @@ class Database:
 
         if self.amt_of_feedback() == 0:
             fake_data = {
-                          "name": "hotswapping sluts volume 2",
-                          "scrape_date": (datetime.now() - datetime.utcfromtimestamp(0)).total_seconds(),
-                          "tags": [ "backdoor penetration", "master/slave threads", "debuggery", "leaky pipe"],
-                          "likes": 0,
-                          "dur": 15.97463007,
-                          "stars": [ "Claudette Shannon", "Ada Lovelace", "Edsgar Dickstra" ],
-                          "views": 42,
-                          "url": "https://unixxx.net/",
-                          "img": "https://unixxx.net/man_pages/pulse_injection.png"
-                        }
+                "name": "hotswapping sluts volume 2",
+                "scrape_date": (datetime.now() - datetime.utcfromtimestamp(0)).total_seconds(),
+                "tags": ["backdoor penetration", "master/slave threads", "debuggery", "leaky pipe"],
+                "likes": 0,
+                "stars": ["Claudette Shannon", "Ada Lovelace", "Edsgar Dickstra"],
+                "url": "https://unixxx.net/",
+                "img": "https://unixxx.net/man_pages/pulse_injection.png"
+            }
             self.save(fake_data)
             self.save_feedback(fake_data["url"], 2)
-
 
     def save(self, data):
         with self.lock:
@@ -48,33 +44,29 @@ class Database:
             c.execute("SELECT url FROM videos WHERE url = ?;", (data["url"],))
             if not c.fetchall():
                 c.execute("INSERT INTO videos VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                           (data["url"]     ,
-                            data["img"]     ,
-                            data["name"]    ,
-                            data["views"]   ,
-                            data["likes"]   ,
-                            data["dur"]     ,
-                            None            ,
-                            datetime.now()  ))
+                          (data["url"],
+                           data["img"],
+                           data["name"],
+                           data["likes"],
+                           None,
+                           datetime.now()))
                 self.cnx.commit()
 
                 for tag in data["tags"]:
                     c.execute("INSERT INTO tags VALUES (?, ?);",
-                               (data["url"], tag))
+                              (data["url"], tag))
                 self.cnx.commit()
 
                 for star in data["stars"]:
                     c.execute("INSERT INTO tags VALUES (?, ?);",
-                               (data["url"], star))
+                              (data["url"], star))
                 self.cnx.commit()
-
 
     def save_feedback(self, url, amt):
         with self.lock:
             c = self.cnx.cursor()
             c.execute("UPDATE videos SET feedback = ? WHERE url = ?;", (amt, url))
             self.cnx.commit()
-
 
     def delete(self, url):
         with self.lock:
@@ -84,13 +76,11 @@ class Database:
             c.execute("DELETE FROM tags WHERE url = ?;", (url,))
             self.cnx.commit()
 
-
     def size(self):
         c = self.cnx.cursor()
         with self.lock:
             c.execute("SELECT COUNT(url) FROM videos;")
             return c.fetchone()[0]
-
 
     def amt_of_feedback(self):
         c = self.cnx.cursor()
@@ -98,14 +88,12 @@ class Database:
             c.execute("SELECT COUNT(feedback) FROM videos;")
             return c.fetchone()[0]
 
-
     def give_feedback(self, url, feedback):
         with self.lock:
             c = self.cnx.cursor()
             c.execute("UPDATE videos SET feedback = ? WHERE url = ?;",
-                       (feedback, url))
+                      (feedback, url))
             self.cnx.commit()
-
 
     def was_visited(self, url):
         with self.lock:
@@ -119,7 +107,6 @@ class Database:
             else:
                 return False
 
-
     def has_feedback(self, url):
         with self.lock:
             c = self.cnx.cursor()
@@ -132,7 +119,6 @@ class Database:
             else:
                 return False
 
-
     def get_img(self, url):
         with self.lock:
             c = self.cnx.cursor()
@@ -140,14 +126,13 @@ class Database:
             got = c.fetchone()[0]
             return got
 
-
     def get(self, url):
         with self.lock:
             c = self.cnx.cursor()
-            c.execute('''SELECT img, name, views,
-                      likes, dur, feedback, scrape_date
+            c.execute('''SELECT img, name,
+                      likes, feedback, scrape_date
                       FROM videos WHERE url = ?;''', (url,))
-            img, name, views, likes, dur, feedback, date = c.fetchone()
+            img, name, likes, feedback, date = c.fetchone()
 
             c.execute("SELECT tag FROM tags WHERE url = ?;", (url,))
             tags = [tag[0] for tag in c.fetchall()]
@@ -158,16 +143,13 @@ class Database:
             data = {"url": url,
                     "img": img,
                     "name": name,
-                    "views": views,
                     "likes": likes,
-                    "dur": dur,
                     "feedback": feedback,
                     "scrape_date": date,
                     "tags": tags,
                     "stars": stars}
 
             return data
-
 
     def yield_all(self):
         with self.lock:
@@ -179,7 +161,6 @@ class Database:
             for url in all_urls:
                 yield self.get(url)
 
-
     def yield_some(self, num):
         with self.lock:
             c = self.cnx.cursor()
@@ -189,7 +170,6 @@ class Database:
             for _ in range(min(num, self.size())):
                 url = c.fetchone()[0]
                 yield self.get(url)
-
 
     def yield_rated(self):
         with self.lock:
