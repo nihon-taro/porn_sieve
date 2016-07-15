@@ -20,6 +20,7 @@ class Window(QtGui.QWidget):
     def __init__(self):
         super(Window, self).__init__()
         self.site = "dmm"
+        self.site = "dmm"
         self.xpaths = get_niche_xpaths(self.site)
         self.start_pg = 0
         self.max_pgs = 0
@@ -27,7 +28,7 @@ class Window(QtGui.QWidget):
         self.cur_img = None
         self.last_pred = None
         self.default_img_flag = True
-        self.preview_size = 2 ** 9  # arbitrary number
+        self.preview_size = 2 ** 7  # arbitrary number
 
         self.winlock = RLock()
         self.thr = None
@@ -261,7 +262,7 @@ class Window(QtGui.QWidget):
         data = self.db.get(self.cur_vid)
 
         self.setWindowTitle(data["name"])
-        info_str = "dur: {}\n\nviews: {}\n\nprediction: {}\n\ntags: {}"
+        info_str = "prediction: {}\n\ntags: {}"
 
         n_tags = 15
         tag_str = ""
@@ -271,8 +272,7 @@ class Window(QtGui.QWidget):
             for tag in tags:
                 tag_str += "\n" + tag
 
-        info_str = info_str.format(data["dur"],
-                                   data["views"],
+        info_str = info_str.format(
                                    # old design had an out of 6 scale
                                    round(self.last_pred, 2),
                                    tag_str)

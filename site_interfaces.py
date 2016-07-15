@@ -77,13 +77,13 @@ class DmmScraper(Scraper):
         Scraper.__init__(self)
 
     def fmt_gallery(self, niche, page):
-        return 'http://www.dmm.co.jp/digital/videoa/-/list/=/sort=date/page=' + str(page + 1)
+        return 'http://www.dmm.co.jp/digital/videoa/-/list/=/limit=30/sort=date/page=' + str(page + 1)
 
     def img_munge(self, element):
-        return 'https://placeholdit.imgix.net/~text?txtsize=33&txt=350%C3%97150&w=350&h=150'
+        return element
 
     def vid_munge(self, path):
-        return self.base_url + path
+        return path
 
     def scrape_video_extra(self, pg, data):
         data["name"] = self.__extract_name(pg)
