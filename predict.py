@@ -76,7 +76,7 @@ class Predictor:
 
         self.pca = pca
         self.model = temp_model
-        self.enc = temp_enc
+        self.enc   = temp_enc
 
     def predict(self, data):
         """ Given a dict of video data, predict how much

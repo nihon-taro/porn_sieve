@@ -11,6 +11,7 @@ from misc import redo_predictions, get_niche_xpaths
 from scraper import PopulateQ
 from database import Database
 from predict import Predictor
+
 from site_interfaces import site_selector
 
 
@@ -19,7 +20,7 @@ class Window(QtGui.QWidget):
 
     def __init__(self):
         super(Window, self).__init__()
-        self.site = "dmm"
+
         self.site = "dmm"
         self.xpaths = get_niche_xpaths(self.site)
         self.start_pg = 0
@@ -273,9 +274,9 @@ class Window(QtGui.QWidget):
                 tag_str += "\n" + tag
 
         info_str = info_str.format(
-                                   # old design had an out of 6 scale
-                                   round(self.last_pred, 2),
-                                   tag_str)
+            # old design had an out of 6 scale
+            round(self.last_pred, 2),
+            tag_str)
         self.info_box.setText(info_str)
 
     def pop_video(self):
