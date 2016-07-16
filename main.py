@@ -41,12 +41,13 @@ class Window(QtGui.QWidget):
 
         # Create the entirety of the GUI and
         # link to appropriate functions.
-        self.setWindowTitle('Porn!')
+        self.setWindowTitle('DMM!')
         self.layout = QtGui.QHBoxLayout()
 
         self.init_left_pane()
         self.init_middle_pane()
         self.init_right_pane()
+        self.init_description_pane()
 
         self.setLayout(self.layout)
         self.show()
@@ -187,6 +188,17 @@ class Window(QtGui.QWidget):
 
         self.layout.addLayout(self.right_pane)
 
+    def init_description_pane(self):
+        self.description_pane = QtGui.QVBoxLayout()
+
+        self.description = QtGui.QLabel(self)
+        self.description.setWordWrap(True)
+        self.description.setMaximumWidth(200)
+        self.description.setText("ここから先は、アダルト商品を取り扱うアダルトサイトとなります。18歳未満の方のアクセスは固くお断りいたします。")
+        self.description_pane.addWidget(self.description)
+
+        self.layout.addLayout(self.description_pane)
+
     def init_page_btns(self):
         """
         Create the start page and pages to scrape buttons along
@@ -268,7 +280,7 @@ class Window(QtGui.QWidget):
         n_tags = 15
         tag_str = ""
         if data["tags"]:
-            tags = [tag for tag in data["tags"] if len(tag) > 2]
+            tags = [tag for tag in data["tags"] if len(tag) > 1]
             tags = tags[:min(n_tags, len(data["tags"]))]
             for tag in tags:
                 tag_str += "\n" + tag
@@ -278,6 +290,9 @@ class Window(QtGui.QWidget):
             round(self.last_pred, 2),
             tag_str)
         self.info_box.setText(info_str)
+
+        description = data["description"]
+        self.description.setText(description)
 
     def pop_video(self):
         """ Remove a video from the queue and display in the program. """

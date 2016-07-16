@@ -1,15 +1,15 @@
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.ensemble import RandomForestRegressor as RandomForest
-from sklearn.decomposition import PCA
-from sklearn.externals import joblib
-
-from scipy.sparse import coo_matrix, hstack, vstack
-import numpy as np
-
-from PySide import QtCore
-from queue import PriorityQueue
+import os
+import shutil
 from datetime import datetime
-import os, shutil
+from queue import PriorityQueue
+
+import numpy as np
+from PySide import QtCore
+from scipy.sparse import coo_matrix, hstack
+from sklearn.decomposition import PCA
+from sklearn.ensemble import RandomForestRegressor as RandomForest
+from sklearn.externals import joblib
+from sklearn.feature_extraction.text import CountVectorizer
 
 from database import Database
 

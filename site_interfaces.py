@@ -89,27 +89,28 @@ class DmmScraper(Scraper):
         data["name"] = self.__extract_name(pg)
         data["stars"] = self.__extract_stars(pg)
         data["tags"] = self.__extract_tags(pg)
-        data["tags"] += data["name"].split()
+        # todo : data["name"] は mecab とかで分解したい
+        # data["tags"] += data["name"].split()
         data["likes"] = self.__extract_likes(pg)
-        data["description"] = 'test'
+        data["description"] = self.__extract_description(pg)
 
         return data
 
     def __extract_name(self, html):
-        self.clean(html.xpath(self.meta_xpaths["name"])[0])
+        name = html.xpath(self.meta_xpaths["name"])[0]
         return 'dummy name'
 
     def __extract_stars(self, html):
-        [self.clean(star) for star in html.xpath(self.meta_xpaths["stars"])]
-        return ['dummy_star_1', 'dummy_star_2']
+        return html.xpath(self.meta_xpaths["stars"])
 
     def __extract_tags(self, html):
-        [self.clean(tag) for tag in html.xpath(self.meta_xpaths["tags"])]
-        return ['dummy_tag_1', 'dummy_tag_2']
+        return html.xpath(self.meta_xpaths["tags"])
 
     def __extract_likes(self, html):
-        # float(self.clean(pg.xpath(self.meta_xpaths["likes"])[0]))
-        return 10
+        return float(self.clean(html.xpath(self.meta_xpaths["likes"])[0]))
+
+    def __extract_description(self, html):
+        return html.xpath(self.meta_xpaths["description"])[0].strip()
 
 
 class XvideosScraper(Scraper):
